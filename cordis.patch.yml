@@ -1,0 +1,5 @@
+name: dsh-prometheus
+version: 0.1.0
+description: Prometheus metrics query plugin for DSH
+entry: dist/index.js
+client: dist/client/index.js
