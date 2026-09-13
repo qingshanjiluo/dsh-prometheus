@@ -1,70 +1,54 @@
 # dsh-prometheus
 
-Prometheus 指标查询插件，适用于 DSH 平台。
+查询 Prometheus HTTP API（`/api/v1/*`）的 DeepSeek Harness 工具插件：即时查询、范围查询、抓取目标、告警规则、活跃告警。所有网络访问都经可注入的 `fetchJson` 接缝（默认使用 Node 全局 `fetch` + `AbortSignal.timeout`），单元测试注入假响应、运行期不触达真实网络。
 
-## 功能
-
-- **即时查询**：执行 PromQL 表达式，返回当前时刻的指标值
-- **范围查询**：查询指定时间范围内的指标数据
-- **目标状态**：查看所有抓取目标的健康状态
-- **告警规则**：列出配置的告警规则及其当前状态
-- **活跃告警**：查看当前触发的告警列表
+> 运行时需要一个可访问的 Prometheus 服务器；无服务器时工具会返回 `error` 字段而非抛异常。
 
 ## 安装
 
 ```bash
-npm install dsh-prometheus
+npx -y @deepseek-ai/dsh plugin --profile web add @qingshanjiluo/dsh-prometheus
 ```
+
+重启 DSH 后生效（`dsh --profile web --dump-config` 可在重启前预览是否已纳入 bundle）。
 
 ## 配置
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `enabled` | `boolean` | `true` | 是否启用插件 |
-| `url` | `string` | `http://localhost:9090` | Prometheus 服务器地址 |
-| `timeout` | `number` | `10000` | 请求超时时间（毫秒） |
+| `url` | `string` | `http://localhost:9090` | Prometheus 基础地址（不含 `/api` 路径） |
+| `timeoutMs` | `number` | `10000` | 单次请求超时（毫秒） |
 
 ## 工具
 
-### prom_query
+| 工具 | 参数 | 说明 |
+|------|------|------|
+| `prom_query` | `query` | PromQL 即时查询，返回各序列的标签集与格式化标量值 |
+| `prom_range` | `query`, `start?`, `end?`, `step?` | PromQL 范围查询，返回每条序列的采样点数与最新值；缺省时间窗为最近一小时 |
+| `prom_targets` | — | 抓取目标健康状态：总数、up 数、逐目标 `{job,instance,state,lastError}` |
+| `prom_rules` | — | 告警/记录规则（摊平分组）：`{group,name,query,state,type}` |
+| `prom_alerts` | — | 活跃告警：`{name,state,severity,summary,activeAt}` |
 
-执行 PromQL 即时查询。
-
-```json
-{ "query": "up" }
-```
-
-### prom_range
-
-执行 PromQL 范围查询。
+### 示例
 
 ```json
-{
-  "query": "rate(http_requests_total[5m])",
-  "start": "2024-01-01T00:00:00Z",
-  "end": "2024-01-01T01:00:00Z",
-  "step": "60s"
-}
+{ "query": "rate(http_requests_total[5m])" }
 ```
 
-### prom_targets
-
-查看所有抓取目标状态。无需参数。
-
-### prom_rules
-
-查看告警规则。无需参数。
-
-### prom_alerts
-
-查看活跃告警。无需参数。
-
-## 命令
-
+```json
+{ "query": "up", "start": "2024-01-01T00:00:00Z", "end": "2024-01-01T01:00:00Z", "step": "300s" }
 ```
-/prom query up
-/prom range rate(http_requests_total[5m])
-/prom targets
-/prom rules
-/prom alerts
+
+## 开发
+
+```bash
+npm install
+npm run typecheck   # tsc --noEmit
+npm test            # vitest run
+npm run build       # tsc -p + tsdown -> lib/
+node scripts/load-smoke.mjs   # 断言从构建产物可注册 5 个工具
 ```
+
+## 许可
+
+MIT

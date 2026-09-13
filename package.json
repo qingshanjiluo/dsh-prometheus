@@ -1,32 +1,35 @@
 {
-  "name": "dsh-prometheus",
+  "name": "@qingshanjiluo/dsh-prometheus",
   "version": "0.1.0",
-  "description": "DSH plugin for Prometheus metrics query",
-  "author": "",
-  "license": "ISC",
+  "description": "DeepSeek Harness plugin: query a Prometheus HTTP API (instant/range/targets/rules/alerts) through an injectable fetch seam",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js"
-    },
-    "./client": {
-      "import": "./dist/client/index.js"
-    }
+    ".": { "types": "./lib/index.d.ts", "default": "./lib/index.js" },
+    "./package.json": "./package.json"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["lib/**/*.js", "lib/**/*.d.ts", "cordis.patch.yml", "README.md"],
   "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch"
+    "build": "tsc -p tsconfig.json && tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
-  "dependencies": {
-    "zod": "^3.24.0"
+  "keywords": ["deepseek-harness", "dsh-plugin", "cordis", "prometheus", "monitoring"],
+  "license": "MIT",
+  "engines": { "node": "^22.19 || >=24" },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.6"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.6",
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@types/node": "^22.10.0",
     "tsdown": "^0.11.0",
-    "typescript": "^5.7.0"
-  }
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.4"
+  },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
 }
